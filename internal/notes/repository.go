@@ -10,6 +10,7 @@ type Repository interface {
 	Get(id string) (*Note, error)
 	List() ([]*Note, error)
 	Delete(id string) error
+	Update(note *Note) error
 }
 
 type MemoryRepository struct {
@@ -62,5 +63,17 @@ func (m *MemoryRepository) Delete(id string) error {
 	defer m.mu.Unlock()
 
 	delete(m.data, id)
+	return nil
+}
+
+func (m *MemoryRepository) Update(note *Note) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.data[note.ID]; !exists {
+		return fmt.Errorf("note doesn't exist")
+	}
+
+	m.data[note.ID] = note
 	return nil
 }

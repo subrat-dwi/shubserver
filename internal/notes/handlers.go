@@ -74,3 +74,35 @@ func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write([]byte("Deletion Successful"))
 }
+
+func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	if id == "" {
+		utils.Error(w, http.StatusBadRequest, "missing id")
+		return
+	}
+	existing, err := h.repo.Get(id)
+	if err != nil {
+		utils.Error(w, http.StatusNotFound, "note not found")
+		return
+	}
+
+	var payload Note
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		utils.Error(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+
+	existing.Title = payload.Title
+	existing.Content = payload.Content
+	existing.UpdatedAt = time.Now()
+
+	if err := h.repo.Update(existing); err != nil {
+		utils.Error(w, http.StatusInternalServerError, "failed to update")
+		return
+	}
+
+	json.NewEncoder(w).Encode(existing)
+
+}

@@ -9,6 +9,7 @@ func Routes(h *Handler) chi.Router {
 	r.Get("/{id}", h.getNote)
 	r.Post("/", h.createNote)
 	r.Delete("/{id}", h.deleteNote)
+	r.Put("/{id}", h.updateNote)
 
 	return r
 }
