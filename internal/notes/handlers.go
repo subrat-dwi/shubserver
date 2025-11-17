@@ -65,6 +65,7 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(note)
 }
 
+// Handler to delete a note
 func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -75,6 +76,7 @@ func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Deletion Successful"))
 }
 
+// Handler to update a note
 func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
