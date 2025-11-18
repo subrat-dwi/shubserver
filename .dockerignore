@@ -1,0 +1,19 @@
+# Binaries
+server
+*.exe
+*.dll
+
+# Go build cache
+/go/pkg
+
+# git
+.git
+.gitignore
+
+# editor
+.vscode
+.idea
+
+# env files
+.env
+.env.*
