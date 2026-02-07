@@ -17,3 +17,6 @@ server
 # env files
 .env
 .env.*
+
+
+notes.md

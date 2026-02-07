@@ -11,5 +11,9 @@ func main() {
 	s := app.Setup()
 
 	fmt.Printf("Listening to http://localhost%v\n", s.Addr)
-	http.ListenAndServe(s.Addr, s.Router)
+	err := http.ListenAndServe(s.Addr, s.Router)
+
+	if err != nil {
+		fmt.Println("Server stopped:", err)
+	}
 }

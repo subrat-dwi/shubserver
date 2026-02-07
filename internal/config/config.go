@@ -8,9 +8,9 @@ type Config struct {
 }
 
 func Load() *Config {
-	port := os.Getenv("PORT")
+	port := os.Getenv("SERVER_PORT")
 	if port == "" {
-		port = "8080"
+		port = "8082"
 	}
 	env := os.Getenv("ENV")
 	if env == "" {

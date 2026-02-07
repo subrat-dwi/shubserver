@@ -19,8 +19,13 @@ func Setup() *Server {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welcome to Subrat's Server"))
+		// w.Write([]byte("Welcome to Subrat's Server"))
+		http.ServeFile(w, r, "./web/index.html")
 	})
+
+	fs := http.FileServer(http.Dir("./web/static"))
+	r.Handle("/static/*", http.StripPrefix("/static/", fs))
+
 	r.Mount("/", Routes())
 
 	return &Server{
