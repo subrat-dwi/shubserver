@@ -22,7 +22,7 @@ func NewHandler(repo Repository) *Handler {
 
 // Handler to show all notes
 func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request) {
-	list, err := h.repo.List()
+	list, err := h.repo.List(r.Context())
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "can't access notes")
 		return
@@ -34,7 +34,7 @@ func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request) {
 // Handler to get a single note
 func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	note, err := h.repo.Get(id)
+	note, err := h.repo.Get(r.Context(), id)
 
 	if err != nil {
 		utils.Error(w, http.StatusBadRequest, "note not found")
@@ -57,7 +57,7 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request) {
 	note.CreatedAt = time.Now()
 	note.UpdatedAt = time.Now()
 
-	if err := h.repo.Create(&note); err != nil {
+	if err := h.repo.Create(r.Context(), &note); err != nil {
 		utils.Error(w, http.StatusInternalServerError, "cannot save the note")
 		return
 	}
@@ -69,7 +69,7 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
-	if err := h.repo.Delete(id); err != nil {
+	if err := h.repo.Delete(r.Context(), id); err != nil {
 		utils.Error(w, http.StatusBadRequest, "cannot delete note")
 		return
 	}
@@ -84,7 +84,7 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusBadRequest, "missing id")
 		return
 	}
-	existing, err := h.repo.Get(id)
+	existing, err := h.repo.Get(r.Context(), id)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "note not found")
 		return
@@ -100,7 +100,7 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 	existing.Content = payload.Content
 	existing.UpdatedAt = time.Now()
 
-	if err := h.repo.Update(existing); err != nil {
+	if err := h.repo.Update(r.Context(), existing); err != nil {
 		utils.Error(w, http.StatusInternalServerError, "failed to update")
 		return
 	}

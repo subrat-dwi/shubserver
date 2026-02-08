@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -10,14 +9,15 @@ import (
 )
 
 func ConnectDB() *pgxpool.Pool {
-	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		os.Getenv("POSTGRES_USER"),
-		os.Getenv("POSTGRES_PASSWORD"),
-		os.Getenv("POSTGRES_HOST"),
-		os.Getenv("POSTGRES_PORT"),
-		os.Getenv("POSTGRES_DB"),
-	)
+	// connStr := fmt.Sprintf(
+	// 	"postgres://%s:%s@%s:%s/%s",
+	// 	os.Getenv("POSTGRES_USER"),
+	// 	os.Getenv("POSTGRES_PASSWORD"),
+	// 	os.Getenv("POSTGRES_HOST"),
+	// 	os.Getenv("POSTGRES_PORT"),
+	// 	os.Getenv("POSTGRES_DB"),
+	// )
+	connStr := os.Getenv("DATABASE_URL")
 
 	db, err := pgxpool.New(context.Background(), connStr)
 

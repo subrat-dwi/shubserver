@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/subrat-dwi/shubserver/internal/config"
 )
 
@@ -13,7 +14,7 @@ type Server struct {
 	Addr   string
 }
 
-func Setup() *Server {
+func Setup(db *pgxpool.Pool) *Server {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
@@ -26,7 +27,7 @@ func Setup() *Server {
 	fs := http.FileServer(http.Dir("./web/static"))
 	r.Handle("/static/*", http.StripPrefix("/static/", fs))
 
-	r.Mount("/", Routes())
+	r.Mount("/", Routes(db))
 
 	return &Server{
 		Router: r,

@@ -1,30 +1,144 @@
 package notes
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Repository Interface
 type Repository interface {
-	Create(note *Note) error
-	Get(id string) (*Note, error)
-	List() ([]*Note, error)
-	Delete(id string) error
-	Update(note *Note) error
+	Create(ctx context.Context, note *Note) error
+	Get(ctx context.Context, id string) (*Note, error)
+	List(ctx context.Context) ([]*Note, error)
+	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, note *Note) error
 }
 
+// Postgres Repository
+type PostgresRepository struct {
+	db *pgxpool.Pool
+}
+
+// Postgres Repository Constructor
+func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
+	return &PostgresRepository{db: db}
+}
+
+// ------ CRUD Implementation on DB ------
+func (p *PostgresRepository) Create(ctx context.Context, note *Note) error {
+	query := `
+	INSERT INTO notes(id, title, content)
+	VALUES ($1, $2, $3)
+	`
+
+	_, err := p.db.Exec(ctx, query, note.ID, note.Title, note.Content)
+	return err
+}
+
+func (p *PostgresRepository) Delete(ctx context.Context, id string) error {
+	query := `
+	DELETE FROM notes
+	WHERE id = $1
+	`
+
+	cmd, err := p.db.Exec(ctx, query, id)
+
+	if err != nil {
+		return err
+	}
+
+	if cmd.RowsAffected() == 0 {
+		return errors.New("Note not Found")
+	}
+
+	return nil
+}
+
+func (p *PostgresRepository) Update(ctx context.Context, note *Note) error {
+	query := `
+	UPDATE notes
+	SET title = $2, content = $3
+	WHERE id = $1
+	`
+
+	cmd, err := p.db.Exec(ctx, query, note.ID, note.Title, note.Content)
+
+	if err != nil {
+		return err
+	}
+
+	if cmd.RowsAffected() == 0 {
+		return errors.New("Note not Found")
+	}
+
+	return nil
+}
+
+func (p *PostgresRepository) Get(ctx context.Context, id string) (*Note, error) {
+	query := `
+	SELECT id, title, content
+	FROM notes
+	WHERE id = $1
+	`
+	var n Note
+	err := p.db.QueryRow(ctx, query, id).Scan(&n.ID, &n.Title, &n.Content)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &n, nil
+}
+
+func (p *PostgresRepository) List(ctx context.Context) ([]*Note, error) {
+	query := `
+	SELECT id, title, content, created_at
+	FROM notes
+	ORDER BY created_at DESC
+	`
+
+	rows, err := p.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []*Note
+
+	for rows.Next() {
+		var n Note
+
+		if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.CreatedAt); err != nil {
+			return nil, err
+		}
+
+		notes = append(notes, &n)
+	}
+
+	return notes, rows.Err()
+}
+
+// ----------------------------------------
+
+// Memory Repository
 type MemoryRepository struct {
 	data map[string]*Note
 	mu   sync.RWMutex
 }
 
+// Memory Repository Constructor
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
 		data: make(map[string]*Note),
 	}
 }
 
-func (m *MemoryRepository) Create(note *Note) error {
+// ------ CRUD Implementation on Memory ------
+func (m *MemoryRepository) Create(ctx context.Context, note *Note) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -32,7 +146,7 @@ func (m *MemoryRepository) Create(note *Note) error {
 	return nil
 }
 
-func (m *MemoryRepository) Get(id string) (*Note, error) {
+func (m *MemoryRepository) Get(ctx context.Context, id string) (*Note, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -45,7 +159,7 @@ func (m *MemoryRepository) Get(id string) (*Note, error) {
 	return note, nil
 }
 
-func (m *MemoryRepository) List() ([]*Note, error) {
+func (m *MemoryRepository) List(ctx context.Context) ([]*Note, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -58,7 +172,7 @@ func (m *MemoryRepository) List() ([]*Note, error) {
 	return list, nil
 }
 
-func (m *MemoryRepository) Delete(id string) error {
+func (m *MemoryRepository) Delete(ctx context.Context, id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -66,7 +180,7 @@ func (m *MemoryRepository) Delete(id string) error {
 	return nil
 }
 
-func (m *MemoryRepository) Update(note *Note) error {
+func (m *MemoryRepository) Update(ctx context.Context, note *Note) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
