@@ -31,11 +31,11 @@ func NewNotesPostgresRepository(db *pgxpool.Pool) *NotesPostgresRepository {
 // ------ CRUD Implementation on DB ------
 func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) error {
 	query := `
-	INSERT INTO notes(id, title, content)
+	INSERT INTO notes(user_id, title, content)
 	VALUES ($1, $2, $3)
 	`
 
-	_, err := p.db.Exec(ctx, query, note.ID, note.Title, note.Content)
+	_, err := p.db.Exec(ctx, query, note.UserID, note.Title, note.Content)
 	return err
 }
 
@@ -96,7 +96,7 @@ func (p *NotesPostgresRepository) Get(ctx context.Context, id string) (*Note, er
 
 func (p *NotesPostgresRepository) List(ctx context.Context) ([]*Note, error) {
 	query := `
-	SELECT id, title, content, created_at
+	SELECT id, title, content, updated_at
 	FROM notes
 	ORDER BY created_at DESC
 	`
@@ -112,7 +112,7 @@ func (p *NotesPostgresRepository) List(ctx context.Context) ([]*Note, error) {
 	for rows.Next() {
 		var n Note
 
-		if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.CreatedAt); err != nil {
+		if err := rows.Scan(&n.ID, &n.Title, &n.Content, &n.UpdatedAt); err != nil {
 			return nil, err
 		}
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 	"github.com/subrat-dwi/shubserver/internal/utils"
 )
 
@@ -52,10 +51,6 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
-
-	note.ID = uuid.NewString()
-	note.CreatedAt = time.Now()
-	note.UpdatedAt = time.Now()
 
 	if err := h.repo.Create(r.Context(), &note); err != nil {
 		utils.Error(w, http.StatusInternalServerError, "cannot save the note")
