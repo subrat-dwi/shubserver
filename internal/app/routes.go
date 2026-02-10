@@ -13,9 +13,9 @@ func Routes(db *pgxpool.Pool) chi.Router {
 
 	userRepo := users.NewUsersPostgresRepository(db)
 	notesRepo := notes.NewNotesPostgresRepository(db)
+	// notesRepo := notes.NewMemoryRepository()
 
 	authService := auth.NewAuthService(userRepo)
-	// notesRepo := notes.NewMemoryRepository()
 
 	authHandler := auth.NewAuthHandler(authService)
 	notesHandler := notes.NewNotesHandler(notesRepo)
