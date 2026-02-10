@@ -11,17 +11,17 @@ import (
 )
 
 // Handler struct for notes
-type Handler struct {
-	repo Repository
+type NotesHandler struct {
+	repo NotesRepository
 }
 
 // Constructor for handler
-func NewHandler(repo Repository) *Handler {
-	return &Handler{repo: repo}
+func NewNotesHandler(repo NotesRepository) *NotesHandler {
+	return &NotesHandler{repo: repo}
 }
 
-// Handler to show all notes
-func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request) {
+// NotesHandler to show all notes
+func (h *NotesHandler) listNotes(w http.ResponseWriter, r *http.Request) {
 	list, err := h.repo.List(r.Context())
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "can't access notes")
@@ -31,8 +31,8 @@ func (h *Handler) listNotes(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(list)
 }
 
-// Handler to get a single note
-func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
+// NotesHandler to get a single note
+func (h *NotesHandler) getNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	note, err := h.repo.Get(r.Context(), id)
 
@@ -44,12 +44,12 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(note)
 }
 
-// Handler to create a note
-func (h *Handler) createNote(w http.ResponseWriter, r *http.Request) {
+// NotesHandler to create a note
+func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 	var note Note
 
 	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
-		utils.Error(w, http.StatusBadRequest, "invalide JSON")
+		utils.Error(w, http.StatusBadRequest, "invalid JSON")
 		return
 	}
 
@@ -65,8 +65,8 @@ func (h *Handler) createNote(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(note)
 }
 
-// Handler to delete a note
-func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
+// NotesHandler to delete a note
+func (h *NotesHandler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	if err := h.repo.Delete(r.Context(), id); err != nil {
@@ -76,8 +76,8 @@ func (h *Handler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Deletion Successful"))
 }
 
-// Handler to update a note
-func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
+// NotesHandler to update a note
+func (h *NotesHandler) updateNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
 	if id == "" {

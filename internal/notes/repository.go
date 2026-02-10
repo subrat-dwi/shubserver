@@ -10,7 +10,7 @@ import (
 )
 
 // Repository Interface
-type Repository interface {
+type NotesRepository interface {
 	Create(ctx context.Context, note *Note) error
 	Get(ctx context.Context, id string) (*Note, error)
 	List(ctx context.Context) ([]*Note, error)
@@ -19,17 +19,17 @@ type Repository interface {
 }
 
 // Postgres Repository
-type PostgresRepository struct {
+type NotesPostgresRepository struct {
 	db *pgxpool.Pool
 }
 
 // Postgres Repository Constructor
-func NewPostgresRepository(db *pgxpool.Pool) *PostgresRepository {
-	return &PostgresRepository{db: db}
+func NewNotesPostgresRepository(db *pgxpool.Pool) *NotesPostgresRepository {
+	return &NotesPostgresRepository{db: db}
 }
 
 // ------ CRUD Implementation on DB ------
-func (p *PostgresRepository) Create(ctx context.Context, note *Note) error {
+func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) error {
 	query := `
 	INSERT INTO notes(id, title, content)
 	VALUES ($1, $2, $3)
@@ -39,7 +39,7 @@ func (p *PostgresRepository) Create(ctx context.Context, note *Note) error {
 	return err
 }
 
-func (p *PostgresRepository) Delete(ctx context.Context, id string) error {
+func (p *NotesPostgresRepository) Delete(ctx context.Context, id string) error {
 	query := `
 	DELETE FROM notes
 	WHERE id = $1
@@ -58,7 +58,7 @@ func (p *PostgresRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (p *PostgresRepository) Update(ctx context.Context, note *Note) error {
+func (p *NotesPostgresRepository) Update(ctx context.Context, note *Note) error {
 	query := `
 	UPDATE notes
 	SET title = $2, content = $3
@@ -78,7 +78,7 @@ func (p *PostgresRepository) Update(ctx context.Context, note *Note) error {
 	return nil
 }
 
-func (p *PostgresRepository) Get(ctx context.Context, id string) (*Note, error) {
+func (p *NotesPostgresRepository) Get(ctx context.Context, id string) (*Note, error) {
 	query := `
 	SELECT id, title, content
 	FROM notes
@@ -94,7 +94,7 @@ func (p *PostgresRepository) Get(ctx context.Context, id string) (*Note, error) 
 	return &n, nil
 }
 
-func (p *PostgresRepository) List(ctx context.Context) ([]*Note, error) {
+func (p *NotesPostgresRepository) List(ctx context.Context) ([]*Note, error) {
 	query := `
 	SELECT id, title, content, created_at
 	FROM notes
