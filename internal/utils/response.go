@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func JSON(w http.ResponseWriter, status int, data interface{}) {
@@ -16,6 +17,7 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 
 func Error(w http.ResponseWriter, status int, message string) {
 	JSON(w, status, map[string]string{
+		"status":  strconv.Itoa(status),
 		"message": message,
 	})
 }

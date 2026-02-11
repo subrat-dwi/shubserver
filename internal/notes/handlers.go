@@ -52,10 +52,18 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.repo.Create(r.Context(), &note); err != nil {
-		utils.Error(w, http.StatusInternalServerError, "cannot save the note")
+	userID := r.Context().Value("userID").(string)
+	note.UserID = userID
+
+	dbnote, err := h.repo.Create(r.Context(), &note)
+	if err != nil {
+		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	note.ID = dbnote.ID
+	note.CreatedAt = dbnote.CreatedAt
+	note.UpdatedAt = dbnote.UpdatedAt
 
 	json.NewEncoder(w).Encode(note)
 }

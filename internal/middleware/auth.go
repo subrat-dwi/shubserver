@@ -28,6 +28,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		if claims.UserID == "" {
+			http.Error(w, "UserID is empty", http.StatusUnauthorized)
+		}
+
 		ctx := context.WithValue(r.Context(), "userID", claims.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

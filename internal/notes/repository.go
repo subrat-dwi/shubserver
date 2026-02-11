@@ -11,7 +11,7 @@ import (
 
 // Repository Interface
 type NotesRepository interface {
-	Create(ctx context.Context, note *Note) error
+	Create(ctx context.Context, note *Note) (*Note, error)
 	Get(ctx context.Context, id string) (*Note, error)
 	List(ctx context.Context) ([]*Note, error)
 	Delete(ctx context.Context, id string) error
@@ -29,14 +29,23 @@ func NewNotesPostgresRepository(db *pgxpool.Pool) *NotesPostgresRepository {
 }
 
 // ------ CRUD Implementation on DB ------
-func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) error {
+func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) (*Note, error) {
 	query := `
 	INSERT INTO notes(user_id, title, content)
 	VALUES ($1, $2, $3)
+	RETURNING id, created_at, updated_at
 	`
 
-	_, err := p.db.Exec(ctx, query, note.UserID, note.Title, note.Content)
-	return err
+	if len(note.UserID) == 0 {
+		return nil, errors.New("UserID not available")
+	}
+	// userID, err := uuid.Parse(note.UserID)
+	// if err != nil {
+	// 	return err
+	// }
+	// userID := ctx.Value("userID")
+	err := p.db.QueryRow(ctx, query, note.UserID, note.Title, note.Content).Scan(note.ID, note.CreatedAt, note.UpdatedAt)
+	return note, err
 }
 
 func (p *NotesPostgresRepository) Delete(ctx context.Context, id string) error {
@@ -138,12 +147,12 @@ func NewMemoryRepository() *MemoryRepository {
 }
 
 // ------ CRUD Implementation on Memory ------
-func (m *MemoryRepository) Create(ctx context.Context, note *Note) error {
+func (m *MemoryRepository) Create(ctx context.Context, note *Note) (*Note, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.data[note.ID] = note
-	return nil
+	return note, nil
 }
 
 func (m *MemoryRepository) Get(ctx context.Context, id string) (*Note, error) {
