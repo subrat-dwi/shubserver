@@ -32,7 +32,7 @@ ON passwords(user_id);
 -- Trigram index for service name search within user's passwords
 CREATE INDEX IF NOT EXISTS idx_passwords_name_username_trgm 
 ON passwords 
-USING gin (name, username gin_trgm_ops);
+USING gin (name gin_trgm_ops);
 
 -- Comments for documentation
 COMMENT ON TABLE passwords IS 'Encrypted password storage - server stores ciphertext only, never decrypts';
