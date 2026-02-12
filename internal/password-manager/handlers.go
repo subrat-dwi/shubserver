@@ -66,7 +66,7 @@ func (h *PasswordHandler) createPassword(w http.ResponseWriter, r *http.Request)
 		Nonce:          []byte(req.Nonce),
 		EncryptVersion: 1,
 	}
-
+	// Call the service layer to create the password item
 	created, err := h.passwordService.CreatePassword(r.Context(), password)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())

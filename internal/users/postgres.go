@@ -18,6 +18,7 @@ func NewUsersPostgresRepository(db *pgxpool.Pool) *UsersPostgresRepository {
 
 // ------ Implementation of UserRepository ------
 
+// CreateUser creates a new user in the database
 func (p *UsersPostgresRepository) CreateUser(ctx context.Context, email string, passwordHash string) (*UserDB, error) {
 	query := `
 	INSERT INTO users(email, password_hash)
@@ -40,6 +41,7 @@ func (p *UsersPostgresRepository) CreateUser(ctx context.Context, email string, 
 	return &user, nil
 }
 
+// GetByEmail retrieves a user from the database by their email
 func (p *UsersPostgresRepository) GetByEmail(ctx context.Context, email string) (*UserDB, error) {
 	query := `
 	SELECT id, email, password_hash, created_at, updated_at
@@ -63,6 +65,7 @@ func (p *UsersPostgresRepository) GetByEmail(ctx context.Context, email string) 
 	return &user, nil
 }
 
+// GetByID retrieves a user from the database by their ID
 func (p *UsersPostgresRepository) GetByID(ctx context.Context, id string) (*User, error) {
 	query := `
 	SELECT id, email, created_at, updated_at

@@ -29,6 +29,7 @@ func NewPasswordsPostgresRepository(db *pgxpool.Pool) *PasswordsPostgresReposito
 
 // CRUD implementation on DB
 
+// Create a new password entry in the database
 func (p *PasswordsPostgresRepository) Create(ctx context.Context, password *Password) (*Password, error) {
 	query := `
 	INSERT INTO passwords(user_id, name, username, ciphertext, nonce)
@@ -58,6 +59,7 @@ func (p *PasswordsPostgresRepository) Create(ctx context.Context, password *Pass
 	return &created, nil
 }
 
+// List all password entries for a user from the database
 func (p *PasswordsPostgresRepository) List(ctx context.Context, userID uuid.UUID) ([]*Password, error) {
 	query := `
 	SELECT id, user_id, name, username, ciphertext, nonce, encrypt_version, created_at, updated_at
@@ -93,6 +95,7 @@ func (p *PasswordsPostgresRepository) List(ctx context.Context, userID uuid.UUID
 	return passwords, nil
 }
 
+// Get a specific password entry from the database
 func (p *PasswordsPostgresRepository) Get(ctx context.Context, userID, passwordID uuid.UUID) (*Password, error) {
 	query := `
 	SELECT id, user_id, name, username, ciphertext, nonce, encrypt_version, created_at, updated_at
@@ -117,6 +120,7 @@ func (p *PasswordsPostgresRepository) Get(ctx context.Context, userID, passwordI
 	return &password, nil
 }
 
+// Update a password entry in Database
 func (p *PasswordsPostgresRepository) Update(ctx context.Context, password *Password) (*Password, error) {
 	query := `
 	UPDATE passwords
@@ -149,6 +153,7 @@ func (p *PasswordsPostgresRepository) Update(ctx context.Context, password *Pass
 	return &updated, nil
 }
 
+// Delete a password entry from Database
 func (p *PasswordsPostgresRepository) Delete(ctx context.Context, userID, passwordID uuid.UUID) error {
 	query := `
 	DELETE FROM passwords
@@ -157,6 +162,8 @@ func (p *PasswordsPostgresRepository) Delete(ctx context.Context, userID, passwo
 	_, err := p.db.Exec(ctx, query, passwordID, userID)
 	return err
 }
+
+// Search password entries for a user in the database based on name or username
 func (p *PasswordsPostgresRepository) Search(ctx context.Context, userID uuid.UUID, searchQuery string) ([]*Password, error) {
 	query := `
 	SELECT id, user_id, name, username, ciphertext, nonce, encrypt_version, created_at, updated_at

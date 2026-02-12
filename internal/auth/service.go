@@ -9,14 +9,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// AuthService struct to hold the user repository
 type AuthService struct {
 	users *users.UsersPostgresRepository
 }
 
+// NewAuthService creates a new instance of AuthService
 func NewAuthService(users *users.UsersPostgresRepository) *AuthService {
 	return &AuthService{users: users}
 }
 
+// Register registers a new user and returns the user and JWT token
 func (a *AuthService) Register(ctx context.Context, email string, password string) (*users.User, string, error) {
 	// check if user exists
 	existing, err := a.users.GetByEmail(ctx, email)
@@ -50,6 +53,7 @@ func (a *AuthService) Register(ctx context.Context, email string, password strin
 	}, token, nil
 }
 
+// Login authenticates a user and returns a JWT token if successful
 func (a *AuthService) Login(ctx context.Context, email string, password string) (string, error) {
 	// check if email is registered
 	user, err := a.users.GetByEmail(ctx, email)

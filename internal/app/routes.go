@@ -9,20 +9,25 @@ import (
 	"github.com/subrat-dwi/shubserver/internal/users"
 )
 
-func Routes(db *pgxpool.Pool) chi.Router {
+func Routes(db *pgxpool.Pool, version, env string) chi.Router {
 
+	// Initialize repositories and services
 	userRepo := users.NewUsersPostgresRepository(db)
 	notesRepo := notes.NewNotesPostgresRepository(db)
-	// notesRepo := notes.NewMemoryRepository()
+	// notesRepo := notes.NewMemoryRepository() // Use in-memory repository for testing
 
+	// Initialize services and handlers
 	authService := auth.NewAuthService(userRepo)
 
+	// Initialize handlers
 	authHandler := auth.NewAuthHandler(authService)
 	notesHandler := notes.NewNotesHandler(notesRepo)
 
+	// Set up the router
 	r := chi.NewRouter()
 
-	r.Mount("/health", health.Routes())
+	// Mount routes
+	r.Mount("/health", health.Routes(db, version, env))
 	r.Mount("/users", auth.Routes(authHandler))
 	r.Mount("/notes", notes.Routes(notesHandler))
 

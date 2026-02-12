@@ -5,6 +5,7 @@ import (
 	"github.com/subrat-dwi/shubserver/internal/middleware"
 )
 
+// Routes sets up the routes for the notes module
 func Routes(h *NotesHandler) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.AuthMiddleware)
