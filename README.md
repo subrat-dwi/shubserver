@@ -180,4 +180,4 @@ docker compose run migrate
 
 ## 📄 License
 
-MIT (add your license here)
+MIT License © 2026 Subrat Dwivedi. See [LICENSE](LICENSE) for details.
