@@ -28,9 +28,9 @@ CREATE INDEX IF NOT EXISTS idx_notes_user_created
 ON notes(user_id, created_at DESC);
 
 -- Trigram index for full-text search within user's notes
-CREATE INDEX IF NOT EXISTS idx_notes_user_title_trgm 
+CREATE INDEX IF NOT EXISTS idx_notes_title_trgm 
 ON notes 
-USING gin (user_id, title gin_trgm_ops);
+USING gin (title gin_trgm_ops);
 
 -- Comments for documentation
 COMMENT ON TABLE notes IS 'User notes storage with encryption-ready design';
