@@ -1,90 +1,183 @@
-# ShubServer
-GOAL : A secure, multi user backend built in Go for managing personal productivity data, including notes, todos, passwords, and bookmarks.
+# ShubServer (Webserver)
 
-This will serve as the core API for multiple clients such as CLI apps and bots.
+A Go backend service providing authentication, notes, and password-manager APIs, backed by PostgreSQL (Supabase-ready) with migrations and Docker support.
 
-WORK IN PROGRESS
+---
 
-## What it does
+## ✨ Features
 
-- `GET /` serves a simple HTML page
-- `GET /health` returns `{ "status": "ok" }`
-- `GET /notes` list notes (in-memory)
-- `GET /notes/{id}` get one note
-- `POST /notes` create a note
-- `PUT /notes/{id}` update a note
-- `DELETE /notes/{id}` delete a note
-- `GET /static/form.html` serves a basic form page
+- **Auth**: Register / Login with JWT
+- **Notes**: CRUD with user scoping
+- **Password Manager**: Encrypted blob storage (AES-GCM), never decrypts on server
+- **Health Checks**: Lightweight + detailed endpoints
+- **Migrations**: Versioned SQL migrations
+- **Docker-ready**: Multi-stage build + compose support
 
-Notes are stored in memory for now (no DB yet).
+---
 
-## Project layout (simple view)
+## 🧱 Tech Stack
 
-- `cmd/server/main.go` main entrypoint
-- `internal/app` server setup + route wiring
-- `internal/health` health check handler
-- `internal/notes` notes handlers + in-memory repo
-- `internal/config` env config (port, env)
-- `internal/db` Postgres connection helper (not wired yet)
-- `internal/utils` JSON helpers
-- `web/index.html` homepage
-- `web/static/` static files like the form (dummy pages for now)
-- `Dockerfile` multi-stage build
-- `docker-compose.yml` app + Postgres
-- `.env` env vars for compose
+- **Go** (chi router)
+- **PostgreSQL** (Supabase)
+- **Migrations**: `migrate/migrate`
+- **Docker** + Docker Compose
 
-## Run it locally (Go)
+---
 
-```bash
-# from repo root
+## 📁 Project Structure
 
-go run ./cmd/server
+```
+cmd/
+  server/
+    main.go
+internal/
+  app/
+    routes.go
+    server.go
+  auth/
+    handlers.go
+    jwt.go
+    routes.go
+    service.go
+  config/
+    config.go
+  db/
+    db.go
+  health/
+    handler.go
+    routes.go
+  middleware/
+    auth.go
+  notes/
+    handlers.go
+    model.go
+    repository.go
+    routes.go
+  password-manager/
+    handlers.go
+    model.go
+    repository.go
+    routes.go
+    service.go
+  users/
+    model.go
+    model_db.go
+    postgres.go
+    repository.go
+  utils/
+    errors.go
+    response.go
+migrations/
+  001_create_extensions.*.sql
+  002_create_users_table.*.sql
+  003_create_notes_table.*.sql
+  004_create_passwords_table.*.sql
 ```
 
-Server prints the address, default is `http://localhost:8082` if `SERVER_PORT` is not set.
+---
 
-## Run with Docker Compose
+## 🚀 Quick Start
+
+### 1) Environment Variables
+
+Create a `.env` file:
+
+```env
+APP_ENV=development
+APP_VERSION=dev
+JWT_SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgres://user:pass@host:5432/dbname?sslmode=disable
+```
+
+---
+
+### 2) Run with Docker (Recommended)
 
 ```bash
-# build and run app + db
-
 docker compose up --build
 ```
 
-If you only want the database:
+---
+
+### 3) Run with Local Go
 
 ```bash
-docker compose up -d db
+go mod download
+go run ./cmd/server
 ```
 
-Then open a psql shell:
+---
+
+## 🗃️ Database Migrations
+
+Run migrations:
 
 ```bash
-docker exec -it shubserver-db psql -U subrat -d shubserver
+docker compose run migrate
 ```
 
-## Env vars
+---
 
-From `.env` (used by compose):
+## 🔌 Health Endpoints
 
-- `SERVER_PORT` (default `8082` if not set)
-- `POSTGRES_DB`
-- `POSTGRES_USER`
-- `POSTGRES_PASSWORD`
-- `POSTGRES_HOST`
-- `POSTGRES_PORT`
+- `GET /health` → Lightweight
+- `GET /health/status` → Status summary
+- `GET /health/detailed` → Full checks
 
-## Quick curl tests
+---
 
-```bash
-curl http://localhost:8080/health
-curl http://localhost:8080/notes
-```
+## 🔐 Security Model (Password Manager)
 
-Create a note:
+- **Server never sees secrets**
+- Client encrypts data using **AES-256-GCM**
+- Keys derived with **Argon2id**
+- Server stores only ciphertext + nonce
 
-```bash
-curl -X POST http://localhost:8080/notes \
-  -H "Content-Type: application/json" \
-  -d '{"title":"first","content":"hello"}'
-```
+---
+
+## 🧪 API Overview
+
+### Auth
+- `POST /auth/register`
+- `POST /auth/login`
+
+### Notes
+- `GET /notes`
+- `GET /notes/{id}`
+- `POST /notes`
+- `PUT /notes/{id}`
+- `DELETE /notes/{id}`
+
+### Password Manager
+- `GET /passwords`
+- `GET /passwords/{id}`
+- `POST /passwords`
+- `PUT /passwords/{id}`
+- `DELETE /passwords/{id}`
+
+---
+
+## ⚙️ Docker Setup
+
+### Dockerfile
+- Multi-stage build
+- Minimal Alpine runtime
+
+### Compose
+- `docker-compose.yml`: app + migrations
+- `docker_compose.dev.yml`: local dev DB
+
+---
+
+## ✅ Contributing
+
+1. Fork the repo
+2. Create a branch
+3. Commit changes
+4. Open a PR
+
+---
+
+## 📄 License
+
+MIT (add your license here)
