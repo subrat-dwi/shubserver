@@ -61,11 +61,7 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note.ID = dbnote.ID
-	note.CreatedAt = dbnote.CreatedAt
-	note.UpdatedAt = dbnote.UpdatedAt
-
-	json.NewEncoder(w).Encode(note)
+	json.NewEncoder(w).Encode(dbnote)
 }
 
 // NotesHandler to delete a note
@@ -109,5 +105,4 @@ func (h *NotesHandler) updateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(existing)
-
 }
