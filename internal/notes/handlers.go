@@ -3,6 +3,7 @@ package notes
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -19,28 +20,47 @@ func NewNotesHandler(repo NotesRepository) *NotesHandler {
 	return &NotesHandler{repo: repo}
 }
 
+// Validation helper
+func (h *NotesHandler) validateNoteInput(title, content string) error {
+	if strings.TrimSpace(title) == "" {
+		return utils.NewValidationError("title is required")
+	}
+	if strings.TrimSpace(content) == "" {
+		return utils.NewValidationError("content is required")
+	}
+	if len(title) > 255 {
+		return utils.NewValidationError("title must be less than 255 characters")
+	}
+	if len(content) > 5000 {
+		return utils.NewValidationError("content must be less than 5000 characters")
+	}
+	return nil
+}
+
 // NotesHandler to show all notes
 func (h *NotesHandler) listNotes(w http.ResponseWriter, r *http.Request) {
-	list, err := h.repo.List(r.Context())
+	userID := r.Context().Value("userID").(string)
+	list, err := h.repo.List(r.Context(), userID)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "can't access notes")
 		return
 	}
 
-	json.NewEncoder(w).Encode(list)
+	utils.JSON(w, http.StatusOK, list)
 }
 
 // NotesHandler to get a single note
 func (h *NotesHandler) getNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	note, err := h.repo.Get(r.Context(), id)
+	userID := r.Context().Value("userID").(string)
+	note, err := h.repo.Get(r.Context(), userID, id)
 
 	if err != nil {
-		utils.Error(w, http.StatusBadRequest, "note not found")
+		utils.Error(w, http.StatusNotFound, "note not found")
 		return
 	}
 
-	json.NewEncoder(w).Encode(note)
+	utils.JSON(w, http.StatusOK, note)
 }
 
 // NotesHandler to create a note
@@ -49,6 +69,12 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
 		utils.Error(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+
+	// Validate input
+	if err := h.validateNoteInput(note.Title, note.Content); err != nil {
+		utils.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -61,29 +87,35 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(dbnote)
+	utils.JSON(w, http.StatusCreated, dbnote)
 }
 
 // NotesHandler to delete a note
 func (h *NotesHandler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	userID := r.Context().Value("userID").(string)
 
-	if err := h.repo.Delete(r.Context(), id); err != nil {
-		utils.Error(w, http.StatusBadRequest, "cannot delete note")
+	if err := h.repo.Delete(r.Context(), userID, id); err != nil {
+		utils.Error(w, http.StatusNotFound, "cannot delete note")
 		return
 	}
-	w.Write([]byte("Deletion Successful"))
+
+	utils.JSON(w, http.StatusOK, map[string]string{
+		"message": "note deleted successfully",
+	})
 }
 
 // NotesHandler to update a note
 func (h *NotesHandler) updateNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+	userID := r.Context().Value("userID").(string)
 
 	if id == "" {
 		utils.Error(w, http.StatusBadRequest, "missing id")
 		return
 	}
-	existing, err := h.repo.Get(r.Context(), id)
+
+	existing, err := h.repo.Get(r.Context(), userID, id)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "note not found")
 		return
@@ -95,14 +127,20 @@ func (h *NotesHandler) updateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate input
+	if err := h.validateNoteInput(payload.Title, payload.Content); err != nil {
+		utils.Error(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	existing.Title = payload.Title
 	existing.Content = payload.Content
 	existing.UpdatedAt = time.Now()
 
-	if err := h.repo.Update(r.Context(), existing); err != nil {
+	if err := h.repo.Update(r.Context(), userID, existing); err != nil {
 		utils.Error(w, http.StatusInternalServerError, "failed to update")
 		return
 	}
 
-	json.NewEncoder(w).Encode(existing)
+	utils.JSON(w, http.StatusOK, existing)
 }

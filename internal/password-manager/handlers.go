@@ -59,11 +59,12 @@ func (h *PasswordHandler) createPassword(w http.ResponseWriter, r *http.Request)
 	userID := r.Context().Value("userID").(uuid.UUID)
 
 	password := &Password{
-		UserID:     userID,
-		Name:       req.Name,
-		Username:   req.Username,
-		Ciphertext: []byte(req.Ciphertext),
-		Nonce:      []byte(req.Nonce),
+		UserID:         userID,
+		Name:           req.Name,
+		Username:       req.Username,
+		Ciphertext:     []byte(req.Ciphertext),
+		Nonce:          []byte(req.Nonce),
+		EncryptVersion: 1,
 	}
 
 	created, err := h.passwordService.CreatePassword(r.Context(), password)
@@ -146,12 +147,13 @@ func (h *PasswordHandler) updatePassword(w http.ResponseWriter, r *http.Request)
 	userID := r.Context().Value("userID").(uuid.UUID)
 
 	password := &Password{
-		ID:         passwordID,
-		UserID:     userID,
-		Name:       req.Name,
-		Username:   req.Username,
-		Ciphertext: []byte(req.Ciphertext),
-		Nonce:      []byte(req.Nonce),
+		ID:             passwordID,
+		UserID:         userID,
+		Name:           req.Name,
+		Username:       req.Username,
+		Ciphertext:     []byte(req.Ciphertext),
+		Nonce:          []byte(req.Nonce),
+		EncryptVersion: 1,
 	}
 
 	updated, err := h.passwordService.UpdatePassword(r.Context(), password)

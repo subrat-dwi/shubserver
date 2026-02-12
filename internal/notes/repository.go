@@ -12,10 +12,10 @@ import (
 // Repository Interface
 type NotesRepository interface {
 	Create(ctx context.Context, note *Note) (*Note, error)
-	Get(ctx context.Context, id string) (*Note, error)
-	List(ctx context.Context) ([]*Note, error)
-	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, note *Note) error
+	Get(ctx context.Context, userID, id string) (*Note, error)
+	List(ctx context.Context, userID string) ([]*Note, error)
+	Delete(ctx context.Context, userID, id string) error
+	Update(ctx context.Context, userID string, note *Note) error
 }
 
 // Postgres Repository
@@ -29,6 +29,8 @@ func NewNotesPostgresRepository(db *pgxpool.Pool) *NotesPostgresRepository {
 }
 
 // ------ CRUD Implementation on DB ------
+
+// Create a new note in the database
 func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) (*Note, error) {
 	query := `
 	INSERT INTO notes(user_id, title, content)
@@ -39,22 +41,19 @@ func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) (*Note
 	if len(note.UserID) == 0 {
 		return nil, errors.New("UserID not available")
 	}
-	// userID, err := uuid.Parse(note.UserID)
-	// if err != nil {
-	// 	return err
-	// }
-	// userID := ctx.Value("userID")
-	err := p.db.QueryRow(ctx, query, note.UserID, note.Title, note.Content).Scan(note.ID, note.CreatedAt, note.UpdatedAt)
+
+	err := p.db.QueryRow(ctx, query, note.UserID, note.Title, note.Content).Scan(&note.ID, &note.CreatedAt, &note.UpdatedAt)
 	return note, err
 }
 
-func (p *NotesPostgresRepository) Delete(ctx context.Context, id string) error {
+// Delete a note from the database
+func (p *NotesPostgresRepository) Delete(ctx context.Context, userID, id string) error {
 	query := `
 	DELETE FROM notes
-	WHERE id = $1
+	WHERE id = $1 AND user_id = $2
 	`
 
-	cmd, err := p.db.Exec(ctx, query, id)
+	cmd, err := p.db.Exec(ctx, query, id, userID)
 
 	if err != nil {
 		return err
@@ -67,14 +66,15 @@ func (p *NotesPostgresRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (p *NotesPostgresRepository) Update(ctx context.Context, note *Note) error {
+// Update an existing note in the database
+func (p *NotesPostgresRepository) Update(ctx context.Context, userID string, note *Note) error {
 	query := `
 	UPDATE notes
 	SET title = $2, content = $3
-	WHERE id = $1
+	WHERE id = $1 AND user_id = $4
 	`
 
-	cmd, err := p.db.Exec(ctx, query, note.ID, note.Title, note.Content)
+	cmd, err := p.db.Exec(ctx, query, note.ID, note.Title, note.Content, userID)
 
 	if err != nil {
 		return err
@@ -87,14 +87,15 @@ func (p *NotesPostgresRepository) Update(ctx context.Context, note *Note) error 
 	return nil
 }
 
-func (p *NotesPostgresRepository) Get(ctx context.Context, id string) (*Note, error) {
+// Get a specific note from the database
+func (p *NotesPostgresRepository) Get(ctx context.Context, userID, id string) (*Note, error) {
 	query := `
-	SELECT id, title, content
-	FROM notes
-	WHERE id = $1
-	`
+    SELECT id, title, content, created_at, updated_at
+    FROM notes
+    WHERE id = $1 AND user_id = $2
+    `
 	var n Note
-	err := p.db.QueryRow(ctx, query, id).Scan(&n.ID, &n.Title, &n.Content)
+	err := p.db.QueryRow(ctx, query, id, userID).Scan(&n.ID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
 
 	if err != nil {
 		return nil, err
@@ -103,14 +104,16 @@ func (p *NotesPostgresRepository) Get(ctx context.Context, id string) (*Note, er
 	return &n, nil
 }
 
-func (p *NotesPostgresRepository) List(ctx context.Context) ([]*Note, error) {
+// List all notes for a specific user from the database
+func (p *NotesPostgresRepository) List(ctx context.Context, userID string) ([]*Note, error) {
 	query := `
 	SELECT id, title, content, updated_at
 	FROM notes
+	WHERE user_id = $1
 	ORDER BY created_at DESC
 	`
 
-	rows, err := p.db.Query(ctx, query)
+	rows, err := p.db.Query(ctx, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +135,9 @@ func (p *NotesPostgresRepository) List(ctx context.Context) ([]*Note, error) {
 }
 
 // ----------------------------------------
-
 // Memory Repository
+// --------------Not Updated, Just for reference-----------------
+
 type MemoryRepository struct {
 	data map[string]*Note
 	mu   sync.RWMutex
