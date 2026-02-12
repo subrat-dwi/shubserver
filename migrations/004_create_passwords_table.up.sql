@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS passwords (
     CONSTRAINT username_max_length CHECK (LENGTH(username) <= 255),
     CONSTRAINT ciphertext_not_empty CHECK (OCTET_LENGTH(ciphertext) > 0),
     CONSTRAINT ciphertext_max_size CHECK (OCTET_LENGTH(ciphertext) <= 1048576), -- 1 MB
-    CONSTRAINT nonce_exact_size CHECK (OCTET_LENGTH(nonce) = 12), -- GCM standard: 96 bits
+    CONSTRAINT nonce_exact_size CHECK (OCTET_LENGTH(nonce) = 12) -- GCM standard: 96 bits
 );
 
 -- Index for user's passwords lookup (most common query)
