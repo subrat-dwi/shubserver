@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Password Repository Interface
 type PasswordRepository interface {
 	Create(ctx context.Context, password *Password) (*Password, error)
-	List(ctx context.Context, userID uuid.UUID) ([]*Password, error)
+	List(ctx context.Context, userID uuid.UUID, searchQuery string) ([]*Password, error)
 	Get(ctx context.Context, userID, passwordID uuid.UUID) (*Password, error)
 	Update(ctx context.Context, password *Password) (*Password, error)
 	Delete(ctx context.Context, userID, passwordID uuid.UUID) error
@@ -60,14 +61,29 @@ func (p *PasswordsPostgresRepository) Create(ctx context.Context, password *Pass
 }
 
 // List all password entries for a user from the database
-func (p *PasswordsPostgresRepository) List(ctx context.Context, userID uuid.UUID) ([]*Password, error) {
+func (p *PasswordsPostgresRepository) List(ctx context.Context, userID uuid.UUID, searchQuery string) ([]*Password, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
 	query := `
 	SELECT id, user_id, name, username, ciphertext, nonce, encrypt_version, created_at, updated_at
 	FROM passwords
-	WHERE user_id = $1
-	ORDER BY created_at DESC
-	`
-	rows, err := p.db.Query(ctx, query, userID)
+	WHERE user_id = $1`
+
+	if searchQuery != "" {
+		query += `
+		AND (name ILIKE $2)
+		ORDER BY similarity(name, $2) DESC, created_at DESC`
+		rows, err = p.db.Query(ctx, query, userID, "%"+searchQuery+"%")
+	} else {
+		query += `
+		ORDER BY created_at DESC
+		`
+		rows, err = p.db.Query(ctx, query, userID)
+	}
+
 	if err != nil {
 		return nil, err
 	}

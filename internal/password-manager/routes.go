@@ -9,11 +9,12 @@ func Routes(h *PasswordHandler) chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.AuthMiddleware)
 
-	r.Get("/passwords", h.listPasswords)
-	r.Post("/passwords", h.createPassword)
-	r.Get("/passwords/{id}", h.getPassword)
-	r.Put("/passwords/{id}", h.updatePassword)
-	r.Delete("/passwords/{id}", h.deletePassword)
+	// Mounted at /passwords in app.Routes, so use relative paths here.
+	r.Get("/", h.listPasswords)
+	r.Post("/", h.createPassword)
+	r.Get("/{id}", h.getPassword)
+	r.Put("/{id}", h.updatePassword)
+	r.Delete("/{id}", h.deletePassword)
 
 	return r
 }

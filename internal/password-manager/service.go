@@ -157,11 +157,11 @@ func (s *PasswordService) CreatePassword(ctx context.Context, password *Password
 }
 
 // ListPasswords lists all password entries for a user
-func (s *PasswordService) ListPasswords(ctx context.Context, userID uuid.UUID) ([]*Password, error) {
+func (s *PasswordService) ListPasswords(ctx context.Context, userID uuid.UUID, searchQuery string) ([]*Password, error) {
 	if userID == uuid.Nil {
 		return nil, fmt.Errorf("user ID cannot be empty")
 	}
-	return s.repo.List(ctx, userID)
+	return s.repo.List(ctx, userID, searchQuery)
 }
 
 // GetPassword retrieves a specific password entry by ID

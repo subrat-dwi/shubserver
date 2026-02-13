@@ -6,16 +6,17 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Repository Interface
 type NotesRepository interface {
 	Create(ctx context.Context, note *Note) (*Note, error)
-	Get(ctx context.Context, userID, id string) (*Note, error)
-	List(ctx context.Context, userID string) ([]*Note, error)
-	Delete(ctx context.Context, userID, id string) error
-	Update(ctx context.Context, userID string, note *Note) error
+	Get(ctx context.Context, userID uuid.UUID, id string) (*Note, error)
+	List(ctx context.Context, userID uuid.UUID) ([]*Note, error)
+	Delete(ctx context.Context, userID uuid.UUID, id string) error
+	Update(ctx context.Context, userID uuid.UUID, note *Note) error
 }
 
 // Postgres Repository
@@ -47,7 +48,7 @@ func (p *NotesPostgresRepository) Create(ctx context.Context, note *Note) (*Note
 }
 
 // Delete a note from the database
-func (p *NotesPostgresRepository) Delete(ctx context.Context, userID, id string) error {
+func (p *NotesPostgresRepository) Delete(ctx context.Context, userID uuid.UUID, id string) error {
 	query := `
 	DELETE FROM notes
 	WHERE id = $1 AND user_id = $2
@@ -67,7 +68,7 @@ func (p *NotesPostgresRepository) Delete(ctx context.Context, userID, id string)
 }
 
 // Update an existing note in the database
-func (p *NotesPostgresRepository) Update(ctx context.Context, userID string, note *Note) error {
+func (p *NotesPostgresRepository) Update(ctx context.Context, userID uuid.UUID, note *Note) error {
 	query := `
 	UPDATE notes
 	SET title = $2, content = $3
@@ -88,7 +89,7 @@ func (p *NotesPostgresRepository) Update(ctx context.Context, userID string, not
 }
 
 // Get a specific note from the database
-func (p *NotesPostgresRepository) Get(ctx context.Context, userID, id string) (*Note, error) {
+func (p *NotesPostgresRepository) Get(ctx context.Context, userID uuid.UUID, id string) (*Note, error) {
 	query := `
     SELECT id, title, content, created_at, updated_at
     FROM notes
@@ -105,7 +106,7 @@ func (p *NotesPostgresRepository) Get(ctx context.Context, userID, id string) (*
 }
 
 // List all notes for a specific user from the database
-func (p *NotesPostgresRepository) List(ctx context.Context, userID string) ([]*Note, error) {
+func (p *NotesPostgresRepository) List(ctx context.Context, userID uuid.UUID) ([]*Note, error) {
 	query := `
 	SELECT id, title, content, updated_at
 	FROM notes
@@ -139,14 +140,14 @@ func (p *NotesPostgresRepository) List(ctx context.Context, userID string) ([]*N
 // --------------Not Updated, Just for reference-----------------
 
 type MemoryRepository struct {
-	data map[string]*Note
+	data map[uuid.UUID]*Note
 	mu   sync.RWMutex
 }
 
 // Memory Repository Constructor
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		data: make(map[string]*Note),
+		data: make(map[uuid.UUID]*Note),
 	}
 }
 
@@ -159,7 +160,7 @@ func (m *MemoryRepository) Create(ctx context.Context, note *Note) (*Note, error
 	return note, nil
 }
 
-func (m *MemoryRepository) Get(ctx context.Context, id string) (*Note, error) {
+func (m *MemoryRepository) Get(ctx context.Context, id uuid.UUID) (*Note, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -185,7 +186,7 @@ func (m *MemoryRepository) List(ctx context.Context) ([]*Note, error) {
 	return list, nil
 }
 
-func (m *MemoryRepository) Delete(ctx context.Context, id string) error {
+func (m *MemoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

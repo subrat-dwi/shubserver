@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/subrat-dwi/shubserver/internal/utils"
 )
 
@@ -39,7 +40,7 @@ func (h *NotesHandler) validateNoteInput(title, content string) error {
 
 // NotesHandler to show all notes
 func (h *NotesHandler) listNotes(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value("userID").(uuid.UUID)
 	list, err := h.repo.List(r.Context(), userID)
 	if err != nil {
 		utils.Error(w, http.StatusNotFound, "can't access notes")
@@ -52,7 +53,7 @@ func (h *NotesHandler) listNotes(w http.ResponseWriter, r *http.Request) {
 // NotesHandler to get a single note
 func (h *NotesHandler) getNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value("userID").(uuid.UUID)
 	note, err := h.repo.Get(r.Context(), userID, id)
 
 	if err != nil {
@@ -78,7 +79,7 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value("userID").(uuid.UUID)
 	note.UserID = userID
 
 	dbnote, err := h.repo.Create(r.Context(), &note)
@@ -93,7 +94,7 @@ func (h *NotesHandler) createNote(w http.ResponseWriter, r *http.Request) {
 // NotesHandler to delete a note
 func (h *NotesHandler) deleteNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value("userID").(uuid.UUID)
 
 	if err := h.repo.Delete(r.Context(), userID, id); err != nil {
 		utils.Error(w, http.StatusNotFound, "cannot delete note")
@@ -108,7 +109,7 @@ func (h *NotesHandler) deleteNote(w http.ResponseWriter, r *http.Request) {
 // NotesHandler to update a note
 func (h *NotesHandler) updateNote(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value("userID").(uuid.UUID)
 
 	if id == "" {
 		utils.Error(w, http.StatusBadRequest, "missing id")

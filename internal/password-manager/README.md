@@ -147,6 +147,8 @@ Response (200 OK):
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "Gmail",
   "username": "user@gmail.com",
+  "password": "base64_encoded_ciphertext",
+  "nonce": "base64_encoded_12_bytes",
   "created_at": "2024-02-12T10:30:00Z",
   "updated_at": "2024-02-12T10:30:00Z"
 }
@@ -183,7 +185,7 @@ Authorization: Bearer <jwt_token>
 
 **Search Passwords**
 ```bash
-GET /passwords/search?q=gmail
+GET /passwords/search?search=gmail
 Authorization: Bearer <jwt_token>
 ```
 Response (200 OK):

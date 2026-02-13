@@ -38,6 +38,12 @@ type ListPasswordsResponse struct {
 	Passwords []PasswordItem `json:"passwords"`
 }
 
+type GetPasswordResponse struct {
+	PasswordItem
+	Ciphertext string `json:"password"` // base64 encoded ciphertext
+	Nonce      string `json:"nonce"`    // base64 encoded nonce
+}
+
 // Handler struct for password manager API
 type PasswordHandler struct {
 	passwordService *PasswordService
@@ -87,11 +93,14 @@ func (h *PasswordHandler) createPassword(w http.ResponseWriter, r *http.Request)
 // Handler function to list all password items for a user
 func (h *PasswordHandler) listPasswords(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(uuid.UUID)
-	passwords, err := h.passwordService.ListPasswords(r.Context(), userID)
+	searchQuery := r.URL.Query().Get("search")
+
+	passwords, err := h.passwordService.ListPasswords(r.Context(), userID, searchQuery)
 	if err != nil {
 		utils.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	var resp ListPasswordsResponse
 	for _, p := range passwords {
 		resp.Passwords = append(resp.Passwords, PasswordItem{
@@ -119,12 +128,16 @@ func (h *PasswordHandler) getPassword(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusNotFound, "password not found")
 		return
 	}
-	resp := PasswordItem{
-		ID:        password.ID.String(),
-		Name:      password.Name,
-		Username:  password.Username,
-		CreatedAt: password.CreatedAt.String(),
-		UpdatedAt: password.UpdatedAt.String(),
+	resp := GetPasswordResponse{
+		PasswordItem: PasswordItem{
+			ID:        password.ID.String(),
+			Name:      password.Name,
+			Username:  password.Username,
+			CreatedAt: password.CreatedAt.String(),
+			UpdatedAt: password.UpdatedAt.String(),
+		},
+		Ciphertext: string(password.Ciphertext),
+		Nonce:      string(password.Nonce),
 	}
 	utils.JSON(w, http.StatusOK, resp)
 }
