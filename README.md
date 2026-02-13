@@ -118,14 +118,6 @@ docker compose run migrate
 
 ---
 
-## 🔌 Health Endpoints
-
-- `GET /health` → Lightweight
-- `GET /health/status` → Status summary
-- `GET /health/detailed` → Full checks
-
----
-
 ## 🔐 Security Model (Password Manager)
 
 - **Server never sees secrets**
@@ -136,6 +128,7 @@ docker compose run migrate
 ---
 
 ## 🧪 API Overview
+- `/api`
 
 ### Auth
 - `POST /auth/register`
@@ -154,6 +147,12 @@ docker compose run migrate
 - `POST /passwords`
 - `PUT /passwords/{id}`
 - `DELETE /passwords/{id}`
+
+### 🔌 Health Endpoints
+- `GET /health` → Lightweight
+- `GET /health/status` → Status summary
+- `GET /health/detailed` → Full checks
+
 
 ---
 

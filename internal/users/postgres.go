@@ -19,18 +19,19 @@ func NewUsersPostgresRepository(db *pgxpool.Pool) *UsersPostgresRepository {
 // ------ Implementation of UserRepository ------
 
 // CreateUser creates a new user in the database
-func (p *UsersPostgresRepository) CreateUser(ctx context.Context, email string, passwordHash string) (*UserDB, error) {
+func (p *UsersPostgresRepository) CreateUser(ctx context.Context, email string, passwordHash string, salt []byte) (*UserDB, error) {
 	query := `
-	INSERT INTO users(email, password_hash)
-	VALUES($1, $2)
-	RETURNING id, email, password_hash, created_at, updated_at
+	INSERT INTO users(email, password_hash, salt)
+	VALUES($1, $2, $3)
+	RETURNING id, email, password_hash, salt, created_at, updated_at
 	`
 	var user UserDB
 
-	err := p.db.QueryRow(ctx, query, email, passwordHash).Scan(
+	err := p.db.QueryRow(ctx, query, email, passwordHash, salt).Scan(
 		&user.Id,
 		&user.Email,
 		&user.PasswordHash,
+		&user.Salt,
 		&user.CreatedAt,
 		&user.UpdatedAt)
 
@@ -44,7 +45,7 @@ func (p *UsersPostgresRepository) CreateUser(ctx context.Context, email string, 
 // GetByEmail retrieves a user from the database by their email
 func (p *UsersPostgresRepository) GetByEmail(ctx context.Context, email string) (*UserDB, error) {
 	query := `
-	SELECT id, email, password_hash, created_at, updated_at
+	SELECT id, email, password_hash, salt, created_at, updated_at
 	FROM users
 	WHERE email = $1
 	`
@@ -55,6 +56,7 @@ func (p *UsersPostgresRepository) GetByEmail(ctx context.Context, email string) 
 		&user.Id,
 		&user.Email,
 		&user.PasswordHash,
+		&user.Salt,
 		&user.CreatedAt,
 		&user.UpdatedAt)
 

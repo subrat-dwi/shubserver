@@ -11,6 +11,7 @@ type UserDB struct {
 	Id           uuid.UUID
 	Email        string
 	PasswordHash string
+	Salt         []byte
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }

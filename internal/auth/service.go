@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 
 	"fmt"
 
@@ -19,6 +20,16 @@ func NewAuthService(users *users.UsersPostgresRepository) *AuthService {
 	return &AuthService{users: users}
 }
 
+// GenerateSalt generates a random salt of the specified length.
+func GenerateSalt() ([]byte, error) {
+	salt := make([]byte, 16) // 16 bytes salt
+	_, err := rand.Read(salt)
+	if err != nil {
+		return nil, err
+	}
+	return salt, nil
+}
+
 // Register registers a new user and returns the user and JWT token
 func (a *AuthService) Register(ctx context.Context, email string, password string) (*users.User, string, error) {
 	// check if user exists
@@ -33,8 +44,11 @@ func (a *AuthService) Register(ctx context.Context, email string, password strin
 		return nil, "", err
 	}
 
+	// generate salt (not used in this implementation, BUT stored with the user for future by Clients)
+	salt, _ := GenerateSalt()
+
 	// create user in DB
-	user, err := a.users.CreateUser(ctx, email, string(passwordHash))
+	user, err := a.users.CreateUser(ctx, email, string(passwordHash), salt)
 	if err != nil {
 		return nil, "", err
 	}
