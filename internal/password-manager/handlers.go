@@ -1,6 +1,7 @@
 package passwordmanager
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 
@@ -128,6 +129,10 @@ func (h *PasswordHandler) getPassword(w http.ResponseWriter, r *http.Request) {
 		utils.Error(w, http.StatusNotFound, "password not found")
 		return
 	}
+
+	ciphertextBase64 := base64.RawStdEncoding.EncodeToString(password.Ciphertext)
+	nonceBase64 := base64.RawStdEncoding.EncodeToString(password.Nonce)
+
 	resp := GetPasswordResponse{
 		PasswordItem: PasswordItem{
 			ID:        password.ID.String(),
@@ -136,8 +141,8 @@ func (h *PasswordHandler) getPassword(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: password.CreatedAt.String(),
 			UpdatedAt: password.UpdatedAt.String(),
 		},
-		Ciphertext: string(password.Ciphertext),
-		Nonce:      string(password.Nonce),
+		Ciphertext: ciphertextBase64,
+		Nonce:      nonceBase64,
 	}
 	utils.JSON(w, http.StatusOK, resp)
 }

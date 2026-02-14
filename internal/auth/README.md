@@ -74,7 +74,8 @@ Response (201 Created):
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "email": "user@example.com",
-  "token": "eyJhbGciOiJIUzI1NiIs..."
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "salt": "base64_encoded_salt"
 }
 ```
 
@@ -92,7 +93,8 @@ Content-Type: application/json
 Response (200 OK):
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIs..."
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "salt": "base64_encoded_salt"
 }
 ```
 

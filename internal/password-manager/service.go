@@ -30,6 +30,8 @@ func NewPasswordService(repo PasswordRepository) *PasswordService {
 	return &PasswordService{repo: repo}
 }
 
+// -------------- Validation Methods --------------
+
 // validatePasswordInput validates all password fields according to security standards
 func (s *PasswordService) validatePasswordInput(password *Password) error {
 	// Validate UserID
@@ -145,6 +147,8 @@ func (s *PasswordService) validateEncryptVersion(version int) error {
 
 	return nil
 }
+
+// --------------- Password Manager Service Methods ---------------
 
 // CreatePassword creates a new password entry
 func (s *PasswordService) CreatePassword(ctx context.Context, password *Password) (*Password, error) {

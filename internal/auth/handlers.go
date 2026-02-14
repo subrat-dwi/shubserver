@@ -29,6 +29,7 @@ type RegisterResponse struct {
 	ID    uuid.UUID `json:"id"`
 	Email string    `json:"email"`
 	Token string    `json:"token"`
+	Salt  string    `json:"salt"`
 }
 
 // LoginRequest struct to hold the login request data
@@ -40,6 +41,7 @@ type LoginRequest struct {
 // LoginResponse struct to hold the login response data
 type LoginResponse struct {
 	Token string `json:"token"`
+	Salt  string `json:"salt"`
 }
 
 // registerUser handles the user registration endpoint
@@ -64,6 +66,7 @@ func (h *AuthHandler) registerUser(w http.ResponseWriter, r *http.Request) {
 		ID:    user.Id,
 		Email: user.Email,
 		Token: token,
+		Salt:  user.Salt,
 	}
 
 	// Set the Content-Type header to application/json and encode the response as JSON
@@ -81,7 +84,7 @@ func (h *AuthHandler) loginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the Login method of the auth service to authenticate the user and generate a token
-	token, err := h.authservice.Login(r.Context(), req.Email, req.Password)
+	token, salt, err := h.authservice.Login(r.Context(), req.Email, req.Password)
 
 	if err != nil {
 		utils.Error(w, http.StatusUnauthorized, err.Error())
@@ -90,6 +93,7 @@ func (h *AuthHandler) loginUser(w http.ResponseWriter, r *http.Request) {
 
 	resp := LoginResponse{
 		Token: token,
+		Salt:  salt,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

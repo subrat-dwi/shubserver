@@ -10,6 +10,7 @@ import (
 type User struct {
 	Id        uuid.UUID
 	Email     string
+	Salt      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

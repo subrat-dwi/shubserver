@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 
 	"fmt"
 
@@ -59,31 +60,38 @@ func (a *AuthService) Register(ctx context.Context, email string, password strin
 		return nil, "", err
 	}
 
+	// Encode the salt as a base64 string to include in the response
+	saltBase64 := base64.RawStdEncoding.EncodeToString(user.Salt)
+
 	return &users.User{
 		Id:        user.Id,
 		Email:     user.Email,
+		Salt:      saltBase64,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
 	}, token, nil
 }
 
 // Login authenticates a user and returns a JWT token if successful
-func (a *AuthService) Login(ctx context.Context, email string, password string) (string, error) {
+func (a *AuthService) Login(ctx context.Context, email string, password string) (string, string, error) {
 	// check if email is registered
 	user, err := a.users.GetByEmail(ctx, email)
 	if err != nil {
-		return "", fmt.Errorf("invalid credentials")
+		return "", "", fmt.Errorf("invalid credentials")
 	}
 
 	// verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", fmt.Errorf("invalid credentials")
+		return "", "", fmt.Errorf("invalid credentials")
 	}
 
 	token, err := GenerateToken(user.Id.String())
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return token, nil
+	// Encode the salt as a base64 string to include in the response
+	saltBase64 := base64.RawStdEncoding.EncodeToString(user.Salt)
+
+	return token, saltBase64, nil
 }
