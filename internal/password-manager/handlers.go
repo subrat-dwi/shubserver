@@ -178,13 +178,23 @@ func (h *PasswordHandler) updatePassword(w http.ResponseWriter, r *http.Request)
 	}
 	userID := r.Context().Value("userID").(uuid.UUID)
 
+	ciphertextBytes, err := base64.RawStdEncoding.DecodeString(req.Ciphertext)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ciphertext encoding")
+		return
+	}
+	nonceBytes, err := base64.RawStdEncoding.DecodeString(req.Nonce)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid nonce encoding")
+		return
+	}
 	password := &Password{
 		ID:             passwordID,
 		UserID:         userID,
 		Name:           req.Name,
 		Username:       req.Username,
-		Ciphertext:     []byte(req.Ciphertext),
-		Nonce:          []byte(req.Nonce),
+		Ciphertext:     ciphertextBytes,
+		Nonce:          nonceBytes,
 		EncryptVersion: 1,
 	}
 
