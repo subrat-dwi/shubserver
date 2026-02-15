@@ -40,7 +40,11 @@ type ListPasswordsResponse struct {
 }
 
 type GetPasswordResponse struct {
-	PasswordItem
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Username   string `json:"username"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
 	Ciphertext string `json:"password"` // base64 encoded ciphertext
 	Nonce      string `json:"nonce"`    // base64 encoded nonce
 }
@@ -65,12 +69,24 @@ func (h *PasswordHandler) createPassword(w http.ResponseWriter, r *http.Request)
 
 	userID := r.Context().Value("userID").(uuid.UUID)
 
+	ciphertext, err := base64.RawStdEncoding.DecodeString(req.Ciphertext)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid ciphertext encoding")
+		return
+	}
+
+	nonce, err := base64.RawStdEncoding.DecodeString(req.Nonce)
+	if err != nil {
+		utils.Error(w, http.StatusBadRequest, "Invalid nonce encoding")
+		return
+	}
+
 	password := &Password{
 		UserID:         userID,
 		Name:           req.Name,
 		Username:       req.Username,
-		Ciphertext:     []byte(req.Ciphertext),
-		Nonce:          []byte(req.Nonce),
+		Ciphertext:     ciphertext,
+		Nonce:          nonce,
 		EncryptVersion: 1,
 	}
 	// Call the service layer to create the password item
@@ -134,13 +150,11 @@ func (h *PasswordHandler) getPassword(w http.ResponseWriter, r *http.Request) {
 	nonceBase64 := base64.RawStdEncoding.EncodeToString(password.Nonce)
 
 	resp := GetPasswordResponse{
-		PasswordItem: PasswordItem{
-			ID:        password.ID.String(),
-			Name:      password.Name,
-			Username:  password.Username,
-			CreatedAt: password.CreatedAt.String(),
-			UpdatedAt: password.UpdatedAt.String(),
-		},
+		ID:         password.ID.String(),
+		Name:       password.Name,
+		Username:   password.Username,
+		CreatedAt:  password.CreatedAt.String(),
+		UpdatedAt:  password.UpdatedAt.String(),
 		Ciphertext: ciphertextBase64,
 		Nonce:      nonceBase64,
 	}
